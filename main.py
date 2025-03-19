@@ -33,7 +33,8 @@ class SA:
         gg = GREEN / (q - 1)
         bb = BLUE / (q - 1)
 
-
+        #print('a1 {} a2 {} a3 {}'.format(a1, a2, a3))
+        #print('rr {} gg {} bb {}'.format(rr, gg, bb))
         i = 0
         for y in range(0, h):
             for x in range(0, w):
@@ -52,11 +53,13 @@ class SA:
                 else:
                     r = 0
                     g = 0
-                    b = 255 * bb
-                    print(b)
-                    print(g)
-                    print(r)
+                    b = I[i] * bb
+                    #print(b)
+                    #print(g)
+                    #print(r)
                 graphic[y, x] = b, g, r
+                #label_colorir.config(text="Processando: {} de {}".format(i, len(I)), foreground="green")
+                #label_colorir.update()
                 i += 1
 
 def apenas_numeros(n):
@@ -90,7 +93,7 @@ def executar():
         graphic = np.zeros((h, w, 3), dtype='uint8')
 
         for i in range(1, q):
-                print(f'lendo imagem {i}')
+                #print(f'lendo imagem {i}')
                 label_prog.config(text="Processando: {} de {}".format(i,q-1))
                 label_prog.update()
                 img = cv.imread(c + '/imagem{}.png'.format(i))
@@ -136,6 +139,7 @@ def colorir():
 
     SA.colorPicture(RED, GREEN, BLUE)
     label_colorir.config(text= "Concluído", foreground = "green")
+    
     
 def salvar():
     global salvar_pasta
@@ -225,6 +229,7 @@ def executar_video():
         label_salvar2.config(text="")
         label_video.config(text="Pasta não encontrada.",foreground="red")
     
+##
 
 def salvar_video():
     global salvar_pasta, caminho_video
@@ -241,6 +246,34 @@ def salvar_video():
         label_video.config(text="")
     else:
         label_salvar2.config(text="Pasta não encontrada.", foreground="red")
+
+# #
+
+def salvar_video():
+    global salvar_pasta, caminho_video
+    salvar_pasta = filedialog.askdirectory(title="Selecione uma pasta")
+
+    if salvar_pasta:
+        nome_arquivo = os.path.basename(caminho_video)
+        destino = os.path.join(salvar_pasta, nome_arquivo)
+
+        if os.path.exists(destino):
+            base, ext = os.path.splitext(nome_arquivo)
+            contador = 1
+            novo_destino = os.path.join(salvar_pasta, f"{base}_{contador}{ext}")
+
+            while os.path.exists(novo_destino):
+                contador += 1
+                novo_destino = os.path.join(salvar_pasta, f"{base}_{contador}{ext}")
+
+            destino = novo_destino
+
+        shutil.move(caminho_video, destino) 
+        label_salvar2.config(text="Salvo com Sucesso.", foreground="green")
+        label_video.config(text="")
+    else:
+        label_salvar2.config(text="Pasta não encontrada.", foreground="red")
+
 
 # config janela
 
