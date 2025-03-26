@@ -7,9 +7,8 @@ import os
 from math import sqrt
 import shutil
 
-global pasta_selecionada, salvar_pasta
-global c, q, I, graphic, h, w, video, imgs, el, caminho_video
-c = False
+global pasta_selecionada, salvar_pasta, c, q, I, graphic, h, w, video, imgs, el, caminho_video
+#c = False
 
 color1 = "#FFFFFF"
 
@@ -70,11 +69,11 @@ def selecionar_pasta():
     label_colorir.config(text= "")
     label_salvar.config(text="")
     pasta_selecionada = filedialog.askdirectory(title="Selecione uma pasta")
-    if pasta_selecionada:
+    try:
         SA.set_folder(pasta_selecionada)
         print(pasta_selecionada)
         label_prog.config(text="Pasta Selecionada, Execute.", foreground="green")
-    else:
+    except:
         label_prog.config(text="Pasta não encontrada.", foreground="red")
 
 def executar():
@@ -82,7 +81,7 @@ def executar():
     label_colorir.config(text= "")
     label_salvar.config(text="")
 
-    if c:
+    try:
         img  = cv.imread(c + '/imagem1.png')
         h, w, _ = img.shape
         imga = img
@@ -108,7 +107,7 @@ def executar():
                 imga = img
 
         label_prog.config(text="Processamento Concluído.", foreground="green")
-    else:
+    except:
        label_prog.config(text="Pasta não encontrada.", foreground="red") 
 
 def colorir():
@@ -144,7 +143,7 @@ def colorir():
 def salvar():
     global salvar_pasta
     salvar_pasta = filedialog.askdirectory(title="Selecione uma pasta")
-    if salvar_pasta:
+    try:
         save = f'{salvar_pasta}/'
         s = int(int(len(os.listdir(save))))
         name = f'{save}grafico{s+1}.png'
@@ -152,18 +151,18 @@ def salvar():
         label_salvar.config(text="Concluído.", foreground="green")
         label_prog.config(text="")
         label_colorir.config(text="")
-    else:
+    except:
         label_salvar.config(text="Pasta não encontrada.", foreground="red")
 
 
 def selecionar_pasta_video():
     global pasta_selecionada
     pasta_selecionada = filedialog.askdirectory(title="Selecione uma pasta")
-    if pasta_selecionada:
+    try:
         SA.set_folder(pasta_selecionada)
         label_salvar2.config(text="")
         label_video.config(text="Pasta Selecionada, Execute.", foreground="green")
-    else:
+    except:
         label_salvar2.config(text="")
         label_video.config(text="Pasta não encontrada.", foreground="red")
         
@@ -173,7 +172,7 @@ def executar_video():
     imgs = []
     label_salvar2.config(text="")
 
-    if c:
+    try:
         average = int(sqrt(len(el)))
         average_2 = average
         
@@ -222,10 +221,8 @@ def executar_video():
 
         video.release()
         caminho_video = os.path.abspath(name)
-        label_video.config(text="Processamento Concluído.")
-        
-
-    else:
+        label_video.config(text="Processamento Concluído.", foreground="green")
+    except:
         label_salvar2.config(text="")
         label_video.config(text="Pasta não encontrada.",foreground="red")
     
@@ -234,7 +231,7 @@ def executar_video():
 def salvar_video():
     global salvar_pasta, caminho_video
     salvar_pasta = filedialog.askdirectory(title="Selecione uma pasta")
-    if salvar_pasta:
+    try:
         origem = caminho_video
         destino = salvar_pasta
         if os.path.exists(destino):
@@ -244,7 +241,7 @@ def salvar_video():
         shutil.move(origem, destino)
         label_salvar2.config(text="Salvo com Sucesso.", foreground="green")
         label_video.config(text="")
-    else:
+    except:
         label_salvar2.config(text="Pasta não encontrada.", foreground="red")
 
 # #
@@ -253,7 +250,7 @@ def salvar_video():
     global salvar_pasta, caminho_video
     salvar_pasta = filedialog.askdirectory(title="Selecione uma pasta")
 
-    if salvar_pasta:
+    try:
         nome_arquivo = os.path.basename(caminho_video)
         destino = os.path.join(salvar_pasta, nome_arquivo)
 
@@ -271,7 +268,7 @@ def salvar_video():
         shutil.move(caminho_video, destino) 
         label_salvar2.config(text="Salvo com Sucesso.", foreground="green")
         label_video.config(text="")
-    else:
+    except:
         label_salvar2.config(text="Pasta não encontrada.", foreground="red")
 
 
