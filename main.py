@@ -6,11 +6,19 @@ import numpy as np
 import os
 from math import sqrt
 import shutil
+import time
 
-global pasta_selecionada, salvar_pasta, c, q, I, graphic, h, w, video, imgs, el, caminho_video
-#c = False
+global pasta_selecionada, salvar_pasta, c, q, I, graphic, h, w, video, imgs, el, caminho_video, camera, pasta_capturas
 
 color1 = "#FFFFFF"
+
+cameras_disponiveis = []
+for i in range(10):
+    cap = cv.VideoCapture(i)
+    if cap.isOpened():
+        print(f"Câmera encontrada no índice {i}")
+        cameras_disponiveis.append(i)
+        cap.release()
 
 class SA:
     def matrizdn(heigth, width):
@@ -57,9 +65,9 @@ class SA:
                     #print(g)
                     #print(r)
                 graphic[y, x] = b, g, r
+                i += 1
                 #label_colorir.config(text="Processando: {} de {}".format(i, len(I)), foreground="green")
                 #label_colorir.update()
-                i += 1
 
 def apenas_numeros(n):
     return n.isdigit() or n == ""
@@ -86,9 +94,7 @@ def executar():
         h, w, _ = img.shape
         imga = img
         del (img)
-
         I = SA.matrizdn(h,w)
-
         graphic = np.zeros((h, w, 3), dtype='uint8')
 
         for i in range(1, q):
@@ -103,7 +109,6 @@ def executar():
                         if not all(img[y, x] == imga[y, x]):
                             I[j] += 1
                         j += 1
-
                 imga = img
 
         label_prog.config(text="Processamento Concluído.", foreground="green")
@@ -133,13 +138,12 @@ def colorir():
         if BLUE > 255:
             BLUE = 255
     
-    print('RED {} GREEN {} BLUE {}'.format(RED, GREEN, BLUE))
-    print(type(RED))
+    #print('RED {} GREEN {} BLUE {}'.format(RED, GREEN, BLUE))
+    #print(type(RED))
 
     SA.colorPicture(RED, GREEN, BLUE)
     label_colorir.config(text= "Concluído", foreground = "green")
-    
-    
+       
 def salvar():
     global salvar_pasta
     salvar_pasta = filedialog.askdirectory(title="Selecione uma pasta")
@@ -154,7 +158,6 @@ def salvar():
     except:
         label_salvar.config(text="Pasta não encontrada.", foreground="red")
 
-
 def selecionar_pasta_video():
     global pasta_selecionada
     pasta_selecionada = filedialog.askdirectory(title="Selecione uma pasta")
@@ -166,23 +169,19 @@ def selecionar_pasta_video():
         label_salvar2.config(text="")
         label_video.config(text="Pasta não encontrada.", foreground="red")
         
-
 def executar_video():
     global c, q, video, imgs, h, w, I, graphic, el, caminho_video
     imgs = []
     label_salvar2.config(text="")
-
     try:
         average = int(sqrt(len(el)))
         average_2 = average
-        
         img = cv.imread(c + '/imagem1.png')
         h, w, _ = img.shape
         imga = img
         del (img)
 
         I = SA.matrizdn(h, w)
-
         graphic = np.zeros((h, w, 3), dtype='uint8')
 
         n = 0
@@ -226,7 +225,7 @@ def executar_video():
         label_salvar2.config(text="")
         label_video.config(text="Pasta não encontrada.",foreground="red")
     
-##
+#
 
 def salvar_video():
     global salvar_pasta, caminho_video
@@ -244,12 +243,11 @@ def salvar_video():
     except:
         label_salvar2.config(text="Pasta não encontrada.", foreground="red")
 
-# #
+#
 
 def salvar_video():
     global salvar_pasta, caminho_video
     salvar_pasta = filedialog.askdirectory(title="Selecione uma pasta")
-
     try:
         nome_arquivo = os.path.basename(caminho_video)
         destino = os.path.join(salvar_pasta, nome_arquivo)
@@ -271,6 +269,62 @@ def salvar_video():
     except:
         label_salvar2.config(text="Pasta não encontrada.", foreground="red")
 
+#
+def camera_selecionada(opcao):
+    global camera
+    print("Você selecionou:", opcao)
+    camera = cv.VideoCapture(opcao)
+    label10.config(text="Câmera selecionada.", foreground="green")
+
+def selecionar_pasta_captura():
+    global pasta_capturas
+    pasta_capturas = filedialog.askdirectory(title="Selecione uma pasta")
+    try:
+        SA.set_folder(pasta_capturas)
+        print(pasta_capturas)
+        label_cap.config(text="Pasta Selecionada.", foreground="green")
+        botaocap.config(state="normal")
+    except:
+        label_cap.config(text="Pasta não encontrada.", foreground="red")
+
+
+def capturar(total, fps):
+    global pasta_capturas
+    try:
+        FPS = fps
+        if FPS < 0:
+            FPS = 1
+        print(FPS)
+
+        if not camera.isOpened():
+            print("Erro ao acessar a câmera")
+            exit()
+        
+        intervalo = 1.0 / FPS
+        print(f"Iniciando captura de {total} imagens a {FPS} Fps...")
+
+        for i in range(1, total + 1):
+            label12.config(text="Progresso : {} de {}".format(i, total), foreground="green")
+            label12.update()
+            ret, frame = camera.read()
+            if not ret:
+                print(f"Erro ao capturar a imagem {i}")
+                continue
+
+            nome_arquivo = f"imagem{i}.png"
+            caminho = os.path.join(pasta_capturas, nome_arquivo)
+
+            cv.imwrite(caminho, frame)
+
+            time.sleep(intervalo)
+
+        camera.release()
+        label12.config(text="Progresso : Concluído", foreground="green")
+        label_cap.config(text="Selecione Outra Pasta", foreground="red")
+        label10.config(text="Selecione uma câmera", foreground="red")
+    except():
+        label_cap.config(text="Algo deu Errado.", foreground="red")
+
 
 # config janela
 
@@ -285,10 +339,12 @@ notebook.pack(expand=True, fill="both")
 
 aba1 = ttk.Frame(notebook)
 aba2 = ttk.Frame(notebook)
+aba3 = ttk.Frame(notebook)
 
 # abas notebook
 notebook.add(aba1, text="Imagem")
 notebook.add(aba2, text="Vídeo")
+notebook.add(aba3, text="Captura")
 
 label1 = ttk.Label(aba1, text="Speclke Analysis - Analisador de Atividade de Speclke")
 label1.place(x=7, y=15)
@@ -326,21 +382,21 @@ vcmd = (window.register(apenas_numeros), "%P")
 label_r = ttk.Label(aba1, text="Vermelho:")
 label_r.place(x=50 , y= 180)
 
-red = ttk.Entry(aba1, validate="key", validatecommand=vcmd, textvariable=valor1)
+red = ttk.Entry(aba1, validate="key", validatecommand=vcmd, textvariable=valor1, width=5)
 red.place(x=130 , y= 180)
 
 #entrada verde
 label_g = ttk.Label(aba1, text="Verde:")
 label_g.place(x=50 , y= 210)
 
-green = ttk.Entry(aba1, validate="key", validatecommand=vcmd, textvariable=valor2)
+green = ttk.Entry(aba1, validate="key", validatecommand=vcmd, textvariable=valor2, width=5)
 green.place(x=130 , y= 210)
 
 #entrada azul
 label_b = ttk.Label(aba1, text="Azul:")
 label_b.place(x=50 , y= 240)
 
-blue = ttk.Entry(aba1, validate="key", validatecommand=vcmd, textvariable=valor3)
+blue = ttk.Entry(aba1, validate="key", validatecommand=vcmd, textvariable=valor3, width=5)
 blue.place(x=130 , y= 240)
 
 botao3 = ttk.Button(aba1, text="Colorir", command=colorir)
@@ -372,7 +428,6 @@ botao6.place(x=190, y=80)
 label7 = ttk.Label(aba2, text="Progresso: ")
 label7.place(x=40, y=120)
 
-
 label_video = ttk.Label(aba2, text = "Selecione uma pasta e Execute.", foreground = "red")
 label_video.place(x=120, y=120)
 
@@ -381,5 +436,69 @@ botao7.place(x=25, y=160)
 
 label_salvar2 = ttk.Label(aba2, text = "")
 label_salvar2.place(x=120, y=160)
+
+#### Captura
+
+label8 = ttk.Label(aba3, text="Speclke Analysis - Analisador de Atividade de Speclke")
+label8.place(x=7, y=15)
+
+label9 = ttk.Label(aba3, text="Captura de imagens:")
+label9.place(x=20, y=50)
+
+label10 = ttk.Label(aba3, text="Configurações de captura:")
+label10.place(x=25, y=75)
+
+valor_fps = tk.StringVar()
+valor_fps.set("1")
+
+vcmd = (aba3.register(apenas_numeros), "%P")
+
+label11 = ttk.Label(aba3, text="Fotos por Segundo:")
+label11.place(x=30, y=90)
+
+fps = ttk.Entry(aba3, validate="key", validatecommand=vcmd, textvariable=valor_fps)
+fps.place(x=40, y=110, width=50)
+
+label_qtd_imgs = tk.Label(aba3, text="Quantidade de Imagens: ")
+label_qtd_imgs.place(x=40, y=130)
+
+valor_qnt = tk.StringVar()
+valor_qnt.set("500")
+
+vcmd2 = (aba3.register(apenas_numeros), "%P")
+
+qtd = tk.Entry(aba3, validate="key", validatecommand=vcmd2, textvariable=valor_qnt)
+qtd.place(x=40, y=150, width=80)
+
+opcoes = cameras_disponiveis
+opcao_selecionada = tk.StringVar(aba3)
+opcao_selecionada.set("")
+
+label12 = ttk.Label(aba3, text="Câmera USB:")
+label12.place(x=40, y=170)
+
+menu_suspenso = tk.OptionMenu(aba3, opcao_selecionada, *opcoes, command=camera_selecionada)
+menu_suspenso.place(x = 40, y=190, width=40, height=20)
+
+label10 = ttk.Label(aba3, text="Selecione uma câmera", foreground="red")
+label10.place(x=90, y=190)
+#
+
+label11 = ttk.Label(aba3, text="Configurações para Salvar:")
+label11.place(x=25, y=220)
+
+#
+
+botao8 = ttk.Button(aba3, text="Selecionar Pasta", command=selecionar_pasta_captura)
+botao8.place(x=40, y=240)
+
+label_cap = ttk.Label(aba3, text="Selecione uma pasta", foreground="red")
+label_cap.place(x=135, y=243)
+
+botaocap = ttk.Button(aba3, text="Capturar", state="disabled", command=lambda: capturar(int(qtd.get()),int(fps.get())))
+botaocap.place(x=40, y=270)
+
+label12 = ttk.Label(aba3, text="")
+label12.place(x=120, y=273)
 
 window.mainloop()
